@@ -1,0 +1,21 @@
+{
+    "java.project.sourcePaths": ["src"],
+    "java.project.outputPath": "bin",
+    "java.project.referencedLibraries": [
+        "lib/**/*.jar",
+        "d:\\Code Folder\\poi-bin-5.2.3\\poi-scratchpad-5.2.3.jar",
+        "d:\\Code Folder\\poi-bin-5.2.3\\poi-5.2.3.jar",
+        "d:\\Code Folder\\poi-bin-5.2.3\\poi-examples-5.2.3.jar",
+        "d:\\Code Folder\\poi-bin-5.2.3\\poi-excelant-5.2.3.jar",
+        "d:\\Code Folder\\poi-bin-5.2.3\\poi-javadoc-5.2.3.jar",
+        "d:\\Code Folder\\poi-bin-5.2.3\\poi-ooxml-5.2.3.jar",
+        "d:\\Code Folder\\poi-bin-5.2.3\\poi-ooxml-full-5.2.3.jar",
+        "d:\\Code Folder\\poi-bin-5.2.3\\poi-ooxml-lite-5.2.3.jar",
+        "d:\\Code Folder\\poi-bin-5.2.3\\lib\\commons-codec-1.15.jar",
+        "d:\\Code Folder\\poi-bin-5.2.3\\lib\\commons-collections4-4.4.jar",
+        "d:\\Code Folder\\poi-bin-5.2.3\\lib\\commons-io-2.11.0.jar",
+        "d:\\Code Folder\\poi-bin-5.2.3\\lib\\commons-math3-3.6.1.jar",
+        "d:\\Code Folder\\poi-bin-5.2.3\\lib\\log4j-api-2.18.0.jar",
+        "d:\\Code Folder\\poi-bin-5.2.3\\lib\\SparseBitSet-1.2.jar"
+    ]
+}
