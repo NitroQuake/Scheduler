@@ -30,12 +30,18 @@ public class Scheduler {
             studentObject object = studentList.get(i);
             object.lookFurther("S1");
             ArrayList<ClassAndTeacher[]> listS1 = object.variationsS1; // all the variations
-            ClassAndTeacher[] varS1 = listS1.get(0);
 
             object.lookFurther("S2");
             ArrayList<ClassAndTeacher[]> listS2 = object.variationsS2; // all the variations
-            ClassAndTeacher[] varS2 = listS2.get(0);
+
+            findBestVariations(listS1, listS2);
+
+            ClassAndTeacher[] varS1 = listS1.get(listS1.size() - 1); // gets last item of the list
+            ClassAndTeacher[] varS2 = listS2.get(listS2.size() - 1); // gets last item of the list
             
+            printVariation(varS1);
+            printVariation(varS2);
+
             subtractTotalStudentsFromStudentSchedule(object, varS1, "S1");
             subtractTotalStudentsFromStudentSchedule(object, varS2, "S2");
 
@@ -154,7 +160,7 @@ public class Scheduler {
                             if(checkPeriodsString.contains(Integer.toString(i + 1))) { // checks if the "whichPeriods" has the period, for example there are two Algebra 2 classes but only one of them has it for period 1
                                 // subtracts student
                                 classList.get(j).subtractStudent(i + 1); // it is + 1 because it needs to align with the period key
-                                System.out.println(classList.get(j).studentTable.get(i + 1) + classList.get(j).className + classList.get(j).whichPeriods);
+                                System.out.println(classList.get(j).studentTable.get(i + 1) + " " + classList.get(j).className + " " + classList.get(j).whichPeriods);
                             }
                         }
                     }
@@ -174,12 +180,49 @@ public class Scheduler {
                             if(checkPeriodsString.contains(Integer.toString(i + 1))) { // checks if the "whichPeriods" has the period, for example there are two Algebra 2 classes but only one of them has it for period 1
                                 // subtracts student
                                 classList.get(j).subtractStudent(i + 1); // it is + 1 because it needs to align with the period key
-                                System.out.println(classList.get(j).studentTable.get(i + 1) + classList.get(j).className + classList.get(j).whichPeriods);
+                                System.out.println(classList.get(j).studentTable.get(i + 1) + " " + classList.get(j).className + " " + classList.get(j).whichPeriods);
                             }
                         }
                     }
                 }
             }
+        }
+    }
+
+    // looks for the best variations by comparing the list from variationsS1 and variationS2 based on class and teacher
+    public static void findBestVariations(ArrayList<ClassAndTeacher[]> variationsS1, ArrayList<ClassAndTeacher[]> variationsS2) {
+        int sizeS1 = variationsS1.size();
+        int sizeS2 = variationsS2.size();
+        int HighestSimilarityScore = 0;
+        int count = 0; // use to keep track of similarity score
+        // loops through variationS1
+        for(int i = 0; i < sizeS1; i++) {
+            // loops through variationS2
+            for(int j = 0; j < sizeS2; j++) {
+                count = 0;
+                // loops through period
+                for(int k = 0; k < 6; k++) {
+                    // checks class name and class teacher
+                    if(variationsS1.get(i)[k].className == variationsS2.get(j)[k].className && variationsS1.get(i)[k].teacher == variationsS2.get(j)[k].teacher) {
+                        count++;
+                    }
+                }
+                // checks if similarity score is better than the best score
+                // The first couple in the variations list will be bad
+                if(count >= HighestSimilarityScore) {
+                    variationsS1.add(variationsS1.get(i));
+                    variationsS2.add(variationsS2.get(j));
+                    HighestSimilarityScore = count;
+                }
+            }
+        }
+        // removes old variationS1 variations
+        for(int i = 0; i < sizeS1; i++) {
+            variationsS1.remove(0);
+        }
+        // removes old variationS2 variations
+        for(int i = 0; i < sizeS2; i++) {
+            variationsS2.remove(0);
         }
     }
 
@@ -197,6 +240,15 @@ public class Scheduler {
             }
             System.out.println(Arrays.toString(classVariations));
         }
+    }
+
+    // prints a single variation
+    public static void printVariation(ClassAndTeacher[] variation) {
+        String[] stringVariation = new String[6];
+        for(int i = 0; i < variation.length; i++) {
+            stringVariation[i] = variation[i].className + " " + variation[i].teacher;
+        }
+        System.out.println(Arrays.toString(stringVariation));
     }
 }
 
