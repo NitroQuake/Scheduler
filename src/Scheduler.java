@@ -1,5 +1,7 @@
 import java.io.File;
 import java.io.FileInputStream;
+
+import org.apache.poi.hpsf.Array;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.ss.usermodel.Row;
@@ -26,7 +28,7 @@ public class Scheduler {
         organizeStudentsToClasses("S1");
         organizeStudentsToClasses("S2");
 
-        for(int i = 0; i < 1 ; i++) {
+        for(int i = 0; i < 5; i++) {
             studentObject object = studentList.get(i);
             object.lookFurther("S1");
             ArrayList<ClassAndTeacher[]> listS1 = object.variationsS1; // all the variations
@@ -44,10 +46,6 @@ public class Scheduler {
 
             subtractTotalStudentsFromStudentSchedule(object, varS1, "S1");
             subtractTotalStudentsFromStudentSchedule(object, varS2, "S2");
-
-            printVariations(listS1);
-            System.out.println();
-            printVariations(listS2);
         }
     }
 
@@ -159,7 +157,7 @@ public class Scheduler {
                             String checkPeriodsString = Integer.toString(checkPeriods);
                             if(checkPeriodsString.contains(Integer.toString(i + 1))) { // checks if the "whichPeriods" has the period, for example there are two Algebra 2 classes but only one of them has it for period 1
                                 // subtracts student
-                                classList.get(j).subtractStudent(i + 1); // it is + 1 because it needs to align with the period key
+                                classList.get(j).subtractStudent(i + 1, student.studentName); // it is + 1 because it needs to align with the period key
                                 System.out.println(classList.get(j).studentTable.get(i + 1) + " " + classList.get(j).className + " " + classList.get(j).whichPeriods);
                             }
                         }
@@ -179,7 +177,7 @@ public class Scheduler {
                             String checkPeriodsString = Integer.toString(checkPeriods);
                             if(checkPeriodsString.contains(Integer.toString(i + 1))) { // checks if the "whichPeriods" has the period, for example there are two Algebra 2 classes but only one of them has it for period 1
                                 // subtracts student
-                                classList.get(j).subtractStudent(i + 1); // it is + 1 because it needs to align with the period key
+                                classList.get(j).subtractStudent(i + 1, student.studentName); // it is + 1 because it needs to align with the period key
                                 System.out.println(classList.get(j).studentTable.get(i + 1) + " " + classList.get(j).className + " " + classList.get(j).whichPeriods);
                             }
                         }
@@ -260,10 +258,10 @@ class classObject {
     public int whichPeriods = 0; // periods are based on number. For example, 126 represents periods 1, 2, and 6
     public int totalStudents = 0;
     public String teacherName = "";
-
     public String typeOfClass = "";
 
     public Hashtable<Integer, Integer> studentTable; // which periods correlated to number of students
+    public Hashtable<Integer, ArrayList<String>> studentsInPeriod; // which periods correlated to the students in the period
 
     classObject(String name, int numClasses, int numStudents, int periods, String teacherName, String typeOfClass) {
         this.className = name;
@@ -272,16 +270,17 @@ class classObject {
         this.whichPeriods = periods;
         this.totalStudents = numClasses * studentsPerClass;
         this.teacherName = teacherName;
-
         this.typeOfClass = typeOfClass;
 
         this.studentTable = new Hashtable<Integer, Integer>(numClasses);
+        this.studentsInPeriod = new Hashtable<Integer, ArrayList<String>>();
 
         // fills in "studentTable" and assigns amount of students each period
         Integer num = periods;
         String nums = num.toString();
         for(int i = 0; i < numClasses; i++) {
             this.studentTable.put(Character.getNumericValue(nums.charAt(i)), numStudents);
+            this.studentsInPeriod.put(Character.getNumericValue(nums.charAt(i)), new ArrayList<>(numStudents));
         }
     }
 
@@ -295,8 +294,10 @@ class classObject {
     }
 
     // subtracts the amount of students based on period
-    public void subtractStudent(int period) {
+    public void subtractStudent(int period, String student) {
         this.studentTable.replace(period, this.studentTable.get(period) - 1); // need to figure out how to check the correct class using the right teacher
+        ArrayList<String> students = studentsInPeriod.get(period); // grabs the arraylist
+        students.add(student); // adds the student
     }
 }
 
@@ -308,8 +309,8 @@ class studentObject implements Comparable{
     public String[] classesS2 = new String[6];
     public int number = 0; // when he/she did the form. For example the first person to finish the form will be 1
     public int priorityLevel = 0;
-    public Hashtable<String, ArrayList> dictPeriodsS1 = new Hashtable<String, ArrayList>(6); // the Arraylist if filled with class objects
-    public Hashtable<String, ArrayList> dictPeriodsS2 = new Hashtable<String, ArrayList>(6);
+    public Hashtable<String, ArrayList<classObject>> dictPeriodsS1 = new Hashtable<String, ArrayList<classObject>>(6); // the Arraylist if filled with class objects
+    public Hashtable<String, ArrayList<classObject>> dictPeriodsS2 = new Hashtable<String, ArrayList<classObject>>(6);
     public ArrayList<ClassAndTeacher[]> variationsS1 = new ArrayList<ClassAndTeacher[]>(); // list of classes and teachers
     public ArrayList<ClassAndTeacher[]> variationsS2 = new ArrayList<ClassAndTeacher[]>(); // list of classes and teachers
     public ClassAndTeacher[] scheduleS1 = new ClassAndTeacher[6];
@@ -333,7 +334,6 @@ class studentObject implements Comparable{
         this.classesS2[3] = class4S2;
         this.classesS2[4] = class5S2;
         this.classesS2[5] = class6S2;
-
         this.number = num;
         this.priorityLevel = givePriority();
     }
@@ -357,7 +357,7 @@ class studentObject implements Comparable{
     }
 
     // Sets all the classes into a hash table based on "classes"
-    public void addToDict(String className, ArrayList objects, String semester) {
+    public void addToDict(String className, ArrayList<classObject> objects, String semester) {
         if(semester.equals("S1")) {
             this.dictPeriodsS1.put(className, objects);
         } else if(semester.equals("S2")) {
@@ -385,9 +385,9 @@ class studentObject implements Comparable{
     }
 
     // Creates a list of available classes based on whichPeriods and if the class is full in that period
-    public void updateAvailableClassesForThePeriod(Hashtable<String, ArrayList> dictOfClasses, ArrayList<ClassAndTeacher> classesForPerSem, String[] StudChosenClassesForSem, int period, int increment) {
+    public void updateAvailableClassesForThePeriod(Hashtable<String, ArrayList<classObject>> dictOfClasses, ArrayList<ClassAndTeacher> classesForPerSem, String[] StudChosenClassesForSem, int period, int increment) {
         // Loops each class with the same name to get the "whichPeriods"
-        for(int i = 0; i < dictOfClasses.get(StudChosenClassesForSem[increment]).size(); i++) {
+        for(int i = 0; i < dictOfClasses.get(StudChosenClassesForSem[increment]).size(); i++) { // this will only work if the studentlist excel file class name matches the classlist excel file class name
             classObject class_ = (classObject) dictOfClasses.get(StudChosenClassesForSem[increment]).get(i); // gets the class object
             Integer periodsAvailable_ = class_.whichPeriods; // gets the "whichPeriods" for the class
             String periodsAvailable = periodsAvailable_.toString(); // turns it into a string
@@ -473,7 +473,7 @@ class studentObject implements Comparable{
     }
 
     // Creates more variations that have null elements in them
-    public void createMoreVariationsOfNullElements(ArrayList<ClassAndTeacher[]> variations, ArrayList<ClassAndTeacher[]> nullVariations, Hashtable<String, ArrayList> dictOfClasses, String[] StudChosenClassesForSem) {
+    public void createMoreVariationsOfNullElements(ArrayList<ClassAndTeacher[]> variations, ArrayList<ClassAndTeacher[]> nullVariations, Hashtable<String, ArrayList<classObject>> dictOfClasses, String[] StudChosenClassesForSem) {
         // loops through each variaton
         for(int i = 0; i < variations.size(); i++) {
             ClassAndTeacher[] variation = variations.get(i);
